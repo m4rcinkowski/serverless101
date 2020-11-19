@@ -1,0 +1,24 @@
+{
+  "name": "serverless101",
+  "version": "1.0.0",
+  "description": "",
+  "main": "handler.ts",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/m4rcinkowski/serverless101.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/m4rcinkowski/serverless101/issues"
+  },
+  "homepage": "https://github.com/m4rcinkowski/serverless101#readme",
+  "devDependencies": {
+    "@types/serverless": "^1.78.9",
+    "serverless-plugin-typescript": "^1.1.9",
+    "typescript": "^4.0.5"
+  }
+}
