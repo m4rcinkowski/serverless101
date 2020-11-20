@@ -21,3 +21,4 @@ functions:
       - http:
           path: slow-data-source/financial-risk/{id}
           method: get
+    timeout: 5
