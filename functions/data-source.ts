@@ -1,6 +1,6 @@
 'use strict';
 
-import { APIGatewayProxyHandler, APIGatewayProxyResult } from 'aws-lambda';
+import { APIGatewayProxyHandler } from 'aws-lambda';
 
 type FinancialRiskInfo = {
     status: 'legit' | 'debtor',

@@ -22,3 +22,11 @@ functions:
           path: slow-data-source/financial-risk/{id}
           method: get
     timeout: 5
+  main:
+    handler: functions/financial-risk.default
+    events:
+      - http:
+          path: financial-risk/{id}
+          method: get
+    environment:
+      SOURCE_URI: https://dn7d67kfl4.execute-api.us-east-1.amazonaws.com/dev/slow-data-source/financial-risk/{id}
