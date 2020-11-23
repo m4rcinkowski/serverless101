@@ -10,6 +10,20 @@ frameworkVersion: '2'
 provider:
   name: aws
   runtime: nodejs12.x
+  environment:
+    COMPANIES_TABLE: companiesFinanceInfo
+  apiGateway:
+    shouldStartNameWithService: true
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - dynamodb:Query
+        - dynamodb:Scan
+        - dynamodb:GetItem
+        - dynamodb:PutItem
+        - dynamodb:UpdateItem
+        - dynamodb:DeleteItem
+      Resource: "arn:aws:dynamodb:${opt:region, self:provider.region}:*:table/${self:provider.environment.COMPANIES_TABLE}"
 
 plugins:
   - serverless-plugin-typescript
@@ -36,7 +50,7 @@ resources:
     companies:
       Type: AWS::DynamoDB::Table
       Properties:
-        TableName: companiesFinanceInfo
+        TableName: ${self:provider.environment.COMPANIES_TABLE}
         AttributeDefinitions:
           - AttributeName: companyId
             AttributeType: N
