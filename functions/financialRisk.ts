@@ -12,7 +12,7 @@ const getUriForCompany = (companyId: number) => {
     return process.env.SOURCE_URI!.replace('{id}', `${companyId}`);
 };
 
-const handler: APIGatewayProxyHandler = async event => {
+export const apiCheckCompany: APIGatewayProxyHandler = async event => {
     const id = parseInt(event.pathParameters?.id || '', 10);
     const response = await fetch(getUriForCompany(id));
     const dbClient = new DynamoDB.DocumentClient();
@@ -43,5 +43,3 @@ const handler: APIGatewayProxyHandler = async event => {
         };
     }
 };
-
-export default handler;

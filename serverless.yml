@@ -3,15 +3,13 @@ service: serverless101
 app: serverless101-app
 org: tomaszmarcinkowski
 
-# You can pin your service to only deploy with a specific Serverless version
-# Check out our docs for more details
 frameworkVersion: '2'
 
 provider:
   name: aws
   runtime: nodejs12.x
   environment:
-    COMPANIES_TABLE: companiesFinanceInfo
+    COMPANIES_TABLE: ${self:service}-${self:provider.stage}-companiesFinanceInfo
   apiGateway:
     shouldStartNameWithService: true
   iamRoleStatements:
@@ -30,14 +28,14 @@ plugins:
 
 functions:
   unreliableDataSource:
-    handler: functions/data-source.default
+    handler: functions/dataSource.default
     events:
       - http:
           path: slow-data-source/financial-risk/{id}
           method: get
     timeout: 5
   main:
-    handler: functions/financial-risk.default
+    handler: functions/financialRisk.apiCheckCompany
     events:
       - http:
           path: financial-risk/{id}
