@@ -5,6 +5,12 @@ org: tomaszmarcinkowski
 
 frameworkVersion: '2'
 
+# @todo lambda 1 - fetches the data only from DynamoDB (checks if it exists or is fresh enough)
+# @todo lambda 1 - if condition above is not met, sends an "fetch" event to SQS
+# @todo lambda 2 - triggered by SQS event; supports only 1 event in a batch - sends a request to "source" API, writes the result to DynamoDB, or returns to SQS in case of a failure.
+# @todo lambda 2 - idempotent? at first, check if the data needs a refreshment?
+# @todo lambda 2 - supports multiple events in a batch
+
 provider:
   name: aws
   runtime: nodejs12.x
