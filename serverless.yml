@@ -5,19 +5,20 @@ org: tomaszmarcinkowski
 
 frameworkVersion: '2'
 
-# @todo lambda 2 - idempotent? at first, check if the data needs a refreshment?
-# @todo lambda 2 - supports multiple events in a batch
-# @todo separate branch with a cleaner and testable version of the code
+custom:
+  stage: ${opt:stage, self:provider.stage}
+  dev:
+    dataSourceBaseUrl: "https://dn7d67kfl4.execute-api.us-east-1.amazonaws.com/dev"
+  prod:
+    dataSourceBaseUrl: "https://p117dpp7y2.execute-api.us-east-1.amazonaws.com/prod"
 
 provider:
   name: aws
   runtime: nodejs12.x
   environment:
-    AWS_ACCOUNT_ID: !Ref "AWS::AccountId"
-    COMPANIES_TABLE: ${self:service}-${self:provider.stage}-companiesFinanceInfo
-    FETCH_QUEUE: ${self:service}-${self:provider.stage}-dataFetchQueue
+    COMPANIES_TABLE: !Ref "CompaniesTable"
     FETCH_QUEUE_URL: !Ref "DataFetchQueue"
-    SOURCE_URI: https://dn7d67kfl4.execute-api.us-east-1.amazonaws.com/dev/slow-data-source/financial-risk/{id}
+    SOURCE_URI: ${self:custom.${self:custom.stage}.dataSourceBaseUrl, self:custom.dev.dataSourceBaseUrl}/slow-data-source/financial-risk/{id}
   apiGateway:
     shouldStartNameWithService: true
   iamRoleStatements:
@@ -29,28 +30,11 @@ provider:
         - dynamodb:PutItem
         - dynamodb:UpdateItem
         - dynamodb:DeleteItem
-      Resource:
-        Fn::Join:
-          - ''
-          - - 'arn:aws:dynamodb:'
-            - Ref: 'AWS::Region'
-            - ':'
-            - Ref: 'AWS::AccountId'
-            - ':table/'
-            - Ref: CompaniesTable
+      Resource: !GetAtt CompaniesTable.Arn
     - Effect: Allow
       Action:
-        - sqs:GetQueueUrl
         - sqs:SendMessage
-      Resource:
-        Fn::Join:
-          - ''
-          - - 'arn:aws:sqs:'
-            - Ref: 'AWS::Region'
-            - ':'
-            - Ref: 'AWS::AccountId'
-            - ':'
-            - ${self:provider.environment.FETCH_QUEUE}
+      Resource: !GetAtt DataFetchQueue.Arn
 
 plugins:
   - serverless-plugin-typescript
@@ -73,17 +57,14 @@ functions:
     handler: functions/financialRisk.queueFetchCompany
     events:
       - sqs:
-          arn:
-            Fn::GetAtt:
-              - DataFetchQueue
-              - Arn
+          arn: !GetAtt DataFetchQueue.Arn
 
 resources:
   Resources:
     CompaniesTable:
       Type: AWS::DynamoDB::Table
       Properties:
-        TableName: ${self:provider.environment.COMPANIES_TABLE}
+        TableName: ${self:service}-${self:custom.stage}-companiesFinanceInfo
         AttributeDefinitions:
           - AttributeName: companyId
             AttributeType: N
@@ -96,4 +77,4 @@ resources:
     DataFetchQueue:
       Type: AWS::SQS::Queue
       Properties:
-        QueueName: ${self:provider.environment.FETCH_QUEUE}
+        QueueName: ${self:service}-${self:custom.stage}-dataFetchQueue

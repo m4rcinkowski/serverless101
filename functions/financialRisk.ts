@@ -4,18 +4,15 @@ import { APIGatewayProxyHandler, SQSHandler } from 'aws-lambda';
 import fetch from 'node-fetch';
 import * as DynamoDB from 'aws-sdk/clients/dynamodb';
 import * as SQS from 'aws-sdk/clients/sqs';
-import { PromiseResult } from 'aws-sdk/lib/request';
-import { AWSError } from 'aws-sdk/lib/error';
 import assert = require('assert');
 
-assert.ok(process.env.SOURCE_URI, 'No SOURCE_URI env variable!');
-assert.ok(process.env.COMPANIES_TABLE, 'Table name is not provided.');
-assert.ok(process.env.FETCH_QUEUE, 'Queue name is not provided.');
-assert.ok(process.env.AWS_ACCOUNT_ID, 'AWS account ID is not provided.');
+const { SOURCE_URI, COMPANIES_TABLE, FETCH_QUEUE_URL } = process.env;
 
-const { SOURCE_URI, COMPANIES_TABLE, FETCH_QUEUE, AWS_ACCOUNT_ID } = process.env;
+assert.ok(SOURCE_URI, 'No SOURCE_URI env variable!');
+assert.ok(COMPANIES_TABLE, 'Table name is not provided.');
+assert.ok(FETCH_QUEUE_URL, 'Queue URL is not provided.');
 
-const getUriForCompany = (companyId: number) => {
+const getUriForCompany = (companyId: number): string => {
     return SOURCE_URI.replace('{id}', `${companyId}`);
 };
 
@@ -23,41 +20,18 @@ type FetchCompanyRiskInfoEventBody = {
     companyId: number;
 };
 
-const getQueueUrl = async (sqsClient: SQS): Promise<string | undefined> => {
-    let queueUrlResponse: PromiseResult<SQS.GetQueueUrlResult, AWSError> | undefined;
-
-    try {
-        queueUrlResponse = await sqsClient.getQueueUrl({
-            QueueName: FETCH_QUEUE,
-            QueueOwnerAWSAccountId: `${AWS_ACCOUNT_ID}`,
-        }).promise();
-
-        if (!queueUrlResponse.QueueUrl) {
-            console.log(`Queue url not found - ${queueUrlResponse.$response.httpResponse}`);
-        }
-    } catch (e) {
-        console.log(`Queue url fetching failed - ${e}`);
-    }
-
-    return queueUrlResponse?.QueueUrl;
-};
-
 const scheduleAsyncCompanyDataRefresh = async (id: number) => {
     const sqs = new SQS();
-    const queueUrl = await getQueueUrl(sqs);
+    const messageBody = <FetchCompanyRiskInfoEventBody>{
+        companyId: id,
+    };
 
-    if (queueUrl) {
-        const messageBody = <FetchCompanyRiskInfoEventBody>{
-            companyId: id,
-        };
-        console.log('About to send a message to the queue', { messageBody });
-        await sqs.sendMessage({
-            QueueUrl: queueUrl,
-            MessageBody: JSON.stringify(messageBody),
-        }).promise();
-    } else {
-        console.error('No queue url found?', { queueUrl });
-    }
+    console.log('About to send a message to the queue', { messageBody });
+
+    await sqs.sendMessage({
+        QueueUrl: FETCH_QUEUE_URL,
+        MessageBody: JSON.stringify(messageBody),
+    }).promise();
 };
 
 const DATA_FRESHNESS_THRESHOLD_MS = 3600e3;
