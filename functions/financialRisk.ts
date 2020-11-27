@@ -77,6 +77,7 @@ export const apiCheckCompany: APIGatewayProxyHandler = async event => {
 };
 
 export const queueFetchCompany: SQSHandler = async event => {
+    //fixme: critical bug ahead - only the first event from a batch is being handled here
     const body: FetchCompanyRiskInfoEventBody = JSON.parse((event.Records.shift() || {}).body || '{}');
     const id = parseInt((body.companyId || '') as any, 10);
 
